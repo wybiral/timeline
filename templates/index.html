@@ -1,0 +1,125 @@
+<html>
+    <head>
+        <title>News</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+* {
+    margin: 0;
+    padding: 0;
+}
+a {
+    color: inherit;
+    text-decoration: none;
+}
+a:hover {
+    text-decoration: underline;
+}
+body {
+    background: #e0e0e0;
+}
+#updates {
+    width: 600px;
+    margin: 1em auto;
+    display: flex;
+    flex-direction: column-reverse;
+}
+article {
+    background: #fff;
+    box-shadow: 0 2px 4px 0 rgba(0, 0, 0, 0.2);
+    padding: 0.5em;
+    animation: fadein 1s;
+}
+@keyframes fadein {
+    from {opacity: 0} to {opacity: 1}
+}
+article img {
+    max-width: 100px;
+    float: left;
+    vertical-align: top;
+    margin-right: 0.5em;
+}
+article + article {
+    margin-bottom: 0.5em;
+}
+article a.title {
+    font-size: 120%;
+}
+article div.timestamp {
+    font-size: 80%;
+    color: #555;
+}
+article div.source {
+    color: #555;
+}
+article p {
+    margin-top: 0.5em;
+    color: #111;
+}
+        </style>
+        <script>
+// WebSocket connection
+let socket;
+
+function createUpdate(data) {
+    const article = document.createElement('article');
+    const header = document.createElement('header');
+    if (data.thumb) {
+        const thumb = document.createElement('img');
+        thumb.src = data.thumb;
+        header.appendChild(thumb);
+    }
+    article.appendChild(header);
+    const title = document.createElement('a');
+    title.className = 'title';
+    title.href = data.url;
+    title.target = '_blank';
+    title.innerText = data.title;
+    header.appendChild(title);
+    const source = document.createElement('div');
+    header.appendChild(source);
+    source.className = 'source';
+    const sourceLink = document.createElement('a');
+    sourceLink.href = data.source.url;
+    sourceLink.target = '_blank';
+    let sourceName = data.source.name;
+    if (data.source.category) {
+        sourceName += ' (' + data.source.category + ')';
+    }
+    sourceLink.innerText = sourceName;
+    source.appendChild(sourceLink);
+    const clear = document.createElement('div');
+    clear.style.clear = 'both';
+    header.appendChild(clear);
+    const body = document.createElement('p');
+    if (typeof data.body != 'undefined') {
+        body.appendChild(document.createTextNode(data.body));
+    }
+    article.appendChild(body);
+    return article;
+}
+
+function connect(updates) {
+    let url = 'ws://localhost:8888/live';
+    socket = new WebSocket(url);
+    socket.onmessage = evt => {
+        const data = JSON.parse(evt.data);
+        updates.appendChild(createUpdate(data));
+    };
+    // if WebSocket closes keep trying to connect
+    socket.onclose = evt => setTimeout(() => connect(updates), 1000);
+}
+
+window.onload = () => {
+    const updates = document.getElementById('updates');
+    {{ range $u := . }}
+    updates.appendChild(createUpdate(JSON.parse({{ $u }})));
+    {{ end }}
+    connect(updates);
+};
+        </script>
+    </head>
+    <body>
+        <div id="updates">
+        </div>
+    </body>
+</html>
