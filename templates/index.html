@@ -6,7 +6,7 @@
         <script src="/static/index.js"></script>
         <script>
 window.onload = () => {
-    const updates = document.getElementById('updates');
+    const updates = document.querySelector('main');
     {{ range $u := . }}
     updates.appendChild(createUpdate(JSON.parse({{ $u }})));
     {{ end }}
@@ -15,7 +15,7 @@ window.onload = () => {
         </script>
     </head>
     <body>
-        <div id="updates">
-        </div>
+        <main>
+        </main>
     </body>
 </html>
